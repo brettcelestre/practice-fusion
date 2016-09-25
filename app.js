@@ -6,12 +6,15 @@ $(document).ready(function(){
         $specialtyDropdown = $('#specialty-dropdown'),
         fields = {
           '-': ['-'],
-          'Dentistry': ['Dentistry-area1', 'Dentistry-area2', 'Dentistry-area3'],
-          'Dermatology': ['Dermatology-area1', 'Dermatology-area2', 'Dermatology-area3'],
-          'Family Medicine': ['Family Medicine-area1', 'Family Medicine-area2', 'Family Medicine-area3'],
-          'General Surgery': ['General Surgery-area1', 'General Surgery-area2', 'General Surgery-area3'],
-          'Psychiatry': ['Psychiatry-area1', 'Psychiatry-area2', 'Psychiatry-area3']
-        }
+          'Dentistry': ['All', 'Endodontics', 'Orthodontics', 'Periodontics'],
+          'Dermatology': ['All', 'Dermatopathology', 'Immunodermatology', 'Phototherapy'],
+          'Family Medicine': ['All', 'Geriatrics', 'Sports Medicine', 'Sleep Medicine'],
+          'Surgery': ['All', 'Orthopaedic', 'Maxillofacial', 'Neurological'],
+          'Psychiatry': ['All', 'Geriatric Psychiatry', 'Addiction Psychiatry', 'Adolescent Psychiatry']
+        },
+				$doctorList = $('#doctor-list'),
+				currentFilter = ['review', 'ASC'],
+				currentArea = '';
         
     // Populates area dropdown
     for (var key in fields) {
@@ -20,7 +23,8 @@ $(document).ready(function(){
     }
     
     // Invokes selectedSpecialty with selected area
-    $('#area-dropdown').change(function(){
+    $areaDropdown.change(function(){
+		 	currentArea = $(this).val();
       selectedSpecialty($(this).val());
     });
     
@@ -31,29 +35,102 @@ $(document).ready(function(){
       for ( var i = 0; i < fields[area].length; i++ ) {
         $('<option>').val(fields[area][i]).text(fields[area][i]).appendTo($specialtyDropdown);
       }
+			// Populates doctors with same area
+			populateAreaDoctors(area);
     };
     
-      // Sorting Priority
-          // Area > Specialty > Review
-          // Once those doctors are depleted sort by review highest > lowest
-          
+    // Invokes populateDoctors with selected area
+    $specialtyDropdown.change(function(){
+		 	if ( $(this).val() === 'All' ) {
+				populateAreaDoctors(currentArea);
+			} else {
+      	populateSpecialtyDoctors($(this).val());
+    	}
+		});
+
+		// Sorts doctors by area
+		var populateAreaDoctors = function(area) {
+			// Stores areas
+		 	var areas = [];
+			// Filters doctors by area only
+			database.doctors.forEach(function(val) {
+				if ( val['area'] === area) {
+					areas.push(val);
+				}
+			});
+			// Sorts filtered areas by current filter
+			sortList(areas, currentFilter);
+			// Invokes appendList with sorted area doctors 
+			appendList(areas);
+		};
+    
+    // Sorts doctors by specialty
+    var populateSpecialtyDoctors = function(specialty) {
+      // Stores specialists
+      var specialtists = [];
+      // Filters doctors by specialty only    
+      database.doctors.forEach(function(val) {
+        if ( val['specialty'] === specialty) {
+          specialtists.push(val);
+        }
+      });
+      // Sorts filtered specialists by rating (highest > lowest)
+      specialtists.sort(function(a, b) {
+        return b.review - a.review;
+      });
+      // Invokes appendList with sorted specialists array
+			appendList(specialtists);      
+    };
+    
+    // Append list function, takes in a sorted array
+    var appendList = function(array) {
+      // Clears out doctor list
+			$doctorList.empty();
+		 	// Appends each doctor to table
+		 	array.forEach(function(val) {
+		 		$doctorList.append('<tr><td>' + val.name + '</td>' +
+				 	'<td>' + val.area + '</td>' +
+					'<td>' + val.specialty + '</td>' +
+					'<td>' + val.review + '</td>' +
+					'<td>' + val.gender + '</td></tr>');	 
+			});
+    };
+   	
+		var sortList = function(array, filter) {
+		 	// Stores type of filter
+		 	var type = filter[0],
+			// Stores types order
+					order = filter[1];
+			// Review
+			if ( type === 'review' && order === 'DSC') {
+				return array.sort(function(a, b) {
+					return b[type] - a[type];
+				});
+			} else if ( type === 'review' && order === 'ASC' ) {
+				return array.sort(function(a, b) {
+					return a[type] - b[type];
+				});
+			}
+			// Gender
+			// Name
+		};
+
+		// Sorting Priority
+    	// Default Sort: Area > Specialty > Review (highest > lowest)
+      // Filter Options: Review | Gender | Location
+        // Review: Toggle (highest > lowest) / (lowest > highest)
+        // Gender: M / F
+
 });
 
-
-// Ruby Area formula
-// ['Physician', 'Neurologist', 'Medical Research', 'Anesthesiologist', 'Surgeon'].sample
-// Ruby Specialty formula
-// ['Orthodontics', 'Anatomical Pathology', 'Virology', 'Physiology', 'Anesthesiology', 'Cardiac Surgeon', 'Abdominal Surgeon', 'Toxicology'].sample
-
 // Database of doctors
-// This is a randomly generated JSON data set. The specialties and area are randomly selected and don't
-// align properly in regards to actual areas of medicine.
+// The properties and values of this JSON dataset are randomly selected from set parameters.
 var database = {
   'doctors': [
   {
     "name": "Frank West",
     "area": "Psychiatry",
-    "speciality": "Physiology",
+    "specialty": "Geriatric Psychiatry",
     "review": 3.5,
     "gender": "Male",
     "longitude": "-79.46631",
@@ -61,7 +138,7 @@ var database = {
   }, {
     "name": "Mildred Carter",
     "area": "Psychiatry",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Addiction Psychiatry",
     "review": 4.5,
     "gender": "Female",
     "longitude": "119.86023",
@@ -69,7 +146,7 @@ var database = {
   }, {
     "name": "Roger Black",
     "area": "Dentistry",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Endodontics",
     "review": 2.4,
     "gender": "Male",
     "longitude": "106.38673",
@@ -77,7 +154,7 @@ var database = {
   }, {
     "name": "Jose Welch",
     "area": "Dermatology",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Dermatopathology",
     "review": 3.2,
     "gender": "Male",
     "longitude": "124.2858",
@@ -85,7 +162,7 @@ var database = {
   }, {
     "name": "Kevin Larson",
     "area": "Family Medicine",
-    "speciality": "Virology",
+    "specialty": "Geriatrics",
     "review": 3.6,
     "gender": "Male",
     "longitude": "10.21889",
@@ -93,7 +170,7 @@ var database = {
   }, {
     "name": "Diana Moreno",
     "area": "Dentistry",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Orthodontics",
     "review": 1.4,
     "gender": "Female",
     "longitude": "4.8734",
@@ -101,7 +178,7 @@ var database = {
   }, {
     "name": "Ruth Howard",
     "area": "Family Medicine",
-    "speciality": "Anesthesiology",
+    "specialty": "Sports Medicine",
     "review": 4.5,
     "gender": "Female",
     "longitude": "-8.8167",
@@ -109,7 +186,7 @@ var database = {
   }, {
     "name": "Amanda Hansen",
     "area": "Family Medicine",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Sleep Medicine",
     "review": 2.6,
     "gender": "Female",
     "longitude": "37.66471",
@@ -117,7 +194,7 @@ var database = {
   }, {
     "name": "Amanda Hernandez",
     "area": "Psychiatry",
-    "speciality": "Physiology",
+    "specialty": "Adolescent Psychiatry",
     "review": 2.1,
     "gender": "Female",
     "longitude": "108.1944",
@@ -125,7 +202,7 @@ var database = {
   }, {
     "name": "Shawn Evans",
     "area": "Dermatology",
-    "speciality": "Physiology",
+    "specialty": "Immunodermatology",
     "review": 1.3,
     "gender": "Male",
     "longitude": "22.92617",
@@ -133,7 +210,7 @@ var database = {
   }, {
     "name": "Todd Dixon",
     "area": "Dentistry",
-    "speciality": "Orthodontics",
+    "specialty": "Periodontics",
     "review": 4.6,
     "gender": "Male",
     "longitude": "107.07336",
@@ -141,7 +218,7 @@ var database = {
   }, {
     "name": "Joshua Hanson",
     "area": "Dentistry",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Endodontics",
     "review": 3.1,
     "gender": "Male",
     "longitude": "22.13333",
@@ -149,7 +226,7 @@ var database = {
   }, {
     "name": "David Medina",
     "area": "Dermatology",
-    "speciality": "Toxicology",
+    "specialty": "Phototherapy",
     "review": 3.9,
     "gender": "Male",
     "longitude": "-79.65333",
@@ -157,7 +234,7 @@ var database = {
   }, {
     "name": "Joe Pierce",
     "area": "Dermatology",
-    "speciality": "Virology",
+    "specialty": "Dermatopathology",
     "review": 4.3,
     "gender": "Male",
     "longitude": "82.40722",
@@ -165,7 +242,7 @@ var database = {
   }, {
     "name": "Melissa Long",
     "area": "Dermatology",
-    "speciality": "Physiology",
+    "specialty": "Immunodermatology",
     "review": 3.7,
     "gender": "Female",
     "longitude": "5.9694",
@@ -173,7 +250,7 @@ var database = {
   }, {
     "name": "Janet Mills",
     "area": "Dentistry",
-    "speciality": "Virology",
+    "specialty": "Orthodontics",
     "review": 2.3,
     "gender": "Female",
     "longitude": "-47.51861",
@@ -181,7 +258,7 @@ var database = {
   }, {
     "name": "Philip Lynch",
     "area": "Dermatology",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Phototherapy",
     "review": 4.7,
     "gender": "Male",
     "longitude": "38.17118",
@@ -189,7 +266,7 @@ var database = {
   }, {
     "name": "Debra Watkins",
     "area": "Dermatology",
-    "speciality": "Orthodontics",
+    "specialty": "Dermatopathology",
     "review": 2.1,
     "gender": "Female",
     "longitude": "9.7351",
@@ -197,7 +274,7 @@ var database = {
   }, {
     "name": "Todd Larson",
     "area": "Family Medicine",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Geriatrics",
     "review": 4.6,
     "gender": "Male",
     "longitude": "16.07261",
@@ -205,7 +282,7 @@ var database = {
   }, {
     "name": "Maria Berry",
     "area": "Dermatology",
-    "speciality": "Orthodontics",
+    "specialty": "Immunodermatology",
     "review": 3.4,
     "gender": "Female",
     "longitude": "25.09985",
@@ -213,7 +290,7 @@ var database = {
   }, {
     "name": "Steven Ruiz",
     "area": "Dentistry",
-    "speciality": "Toxicology",
+    "specialty": "Periodontics",
     "review": 3.8,
     "gender": "Male",
     "longitude": "100.55458",
@@ -221,7 +298,7 @@ var database = {
   }, {
     "name": "Shawn Rodriguez",
     "area": "Psychiatry",
-    "speciality": "Toxicology",
+    "specialty": "Geriatric Psychiatry",
     "review": 2.7,
     "gender": "Male",
     "longitude": "24.75",
@@ -229,7 +306,7 @@ var database = {
   }, {
     "name": "Amanda Parker",
     "area": "Dentistry",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Endodontics",
     "review": 3.5,
     "gender": "Female",
     "longitude": "76.31538",
@@ -237,7 +314,7 @@ var database = {
   }, {
     "name": "Cheryl Dunn",
     "area": "Dermatology",
-    "speciality": "Toxicology",
+    "specialty": "Phototherapy",
     "review": 1.8,
     "gender": "Female",
     "longitude": "123.1073",
@@ -245,7 +322,7 @@ var database = {
   }, {
     "name": "Norma Reynolds",
     "area": "Psychiatry",
-    "speciality": "Virology",
+    "specialty": "Addiction Psychiatry",
     "review": 2.9,
     "gender": "Female",
     "longitude": "108.96329",
@@ -253,15 +330,15 @@ var database = {
   }, {
     "name": "Kelly Jacobs",
     "area": "Dentistry",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Orthodontics",
     "review": 1.4,
     "gender": "Female",
     "longitude": "107.81284",
     "latitude": "-7.54946"
   }, {
     "name": "Phyllis Smith",
-    "area": "General Surgery",
-    "speciality": "Physiology",
+    "area": "Surgery",
+    "specialty": "Orthopaedic",
     "review": 3.0,
     "gender": "Female",
     "longitude": "-77.85",
@@ -269,15 +346,15 @@ var database = {
   }, {
     "name": "Cynthia Garza",
     "area": "Dermatology",
-    "speciality": "Orthodontics",
+    "specialty": "Dermatopathology",
     "review": 4.1,
     "gender": "Female",
     "longitude": "34.29614",
     "latitude": "-12.92744"
   }, {
     "name": "Willie Thomas",
-    "area": "General Surgery",
-    "speciality": "Cardiac Surgeon",
+    "area": "Surgery",
+    "specialty": "Maxillofacial",
     "review": 2.3,
     "gender": "Male",
     "longitude": "108.10548",
@@ -285,15 +362,15 @@ var database = {
   }, {
     "name": "Andrew Scott",
     "area": "Psychiatry",
-    "speciality": "Orthodontics",
+    "specialty": "Adolescent Psychiatry",
     "review": 2.8,
     "gender": "Male",
     "longitude": "98.6961",
     "latitude": "2.6081"
   }, {
     "name": "Andrea Shaw",
-    "area": "General Surgery",
-    "speciality": "Virology",
+    "area": "Surgery",
+    "specialty": "Neurological",
     "review": 1.1,
     "gender": "Female",
     "longitude": "82.36098",
@@ -301,7 +378,7 @@ var database = {
   }, {
     "name": "Lillian Harrison",
     "area": "Psychiatry",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Geriatric Psychiatry",
     "review": 1.3,
     "gender": "Female",
     "longitude": "-75.68935",
@@ -309,7 +386,7 @@ var database = {
   }, {
     "name": "Sharon Howell",
     "area": "Psychiatry",
-    "speciality": "Virology",
+    "specialty": "Addiction Psychiatry",
     "review": 2.4,
     "gender": "Female",
     "longitude": "16.06067",
@@ -317,15 +394,15 @@ var database = {
   }, {
     "name": "Helen Hunter",
     "area": "Family Medicine",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Sports Medicine",
     "review": 2.5,
     "gender": "Female",
     "longitude": "26.75377",
     "latitude": "56.60826"
   }, {
     "name": "Stephanie James",
-    "area": "General Surgery",
-    "speciality": "Virology",
+    "area": "Surgery",
+    "specialty": "Orthopaedic",
     "review": 4.5,
     "gender": "Female",
     "longitude": "14.53839",
@@ -333,7 +410,7 @@ var database = {
   }, {
     "name": "Robert Wallace",
     "area": "Family Medicine",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Sleep Medicine",
     "review": 3.3,
     "gender": "Male",
     "longitude": "94.40414",
@@ -341,7 +418,7 @@ var database = {
   }, {
     "name": "Patrick Edwards",
     "area": "Psychiatry",
-    "speciality": "Virology",
+    "specialty": "Adolescent Psychiatry",
     "review": 2.5,
     "gender": "Male",
     "longitude": "-91.66451",
@@ -349,7 +426,7 @@ var database = {
   }, {
     "name": "Theresa Mitchell",
     "area": "Psychiatry",
-    "speciality": "Virology",
+    "specialty": "Geriatric Psychiatry",
     "review": 4.1,
     "gender": "Female",
     "longitude": "109.90308",
@@ -357,7 +434,7 @@ var database = {
   }, {
     "name": "Anne Baker",
     "area": "Dentistry",
-    "speciality": "Virology",
+    "specialty": "Periodontics",
     "review": 3.5,
     "gender": "Female",
     "longitude": "106.71789",
@@ -365,7 +442,7 @@ var database = {
   }, {
     "name": "Nicole Elliott",
     "area": "Psychiatry",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Addiction Psychiatry",
     "review": 2.4,
     "gender": "Female",
     "longitude": "-64.52515",
@@ -373,7 +450,7 @@ var database = {
   }, {
     "name": "Elizabeth Willis",
     "area": "Family Medicine",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Geriatrics",
     "review": 3.9,
     "gender": "Female",
     "longitude": "29.42559",
@@ -381,15 +458,15 @@ var database = {
   }, {
     "name": "Gregory Stevens",
     "area": "Family Medicine",
-    "speciality": "Physiology",
+    "specialty": "Sports Medicine",
     "review": 3.9,
     "gender": "Male",
     "longitude": "-75.57028",
     "latitude": "4.6375"
   }, {
     "name": "Betty Kim",
-    "area": "General Surgery",
-    "speciality": "Physiology",
+    "area": "Surgery",
+    "specialty": "Maxillofacial",
     "review": 2.0,
     "gender": "Female",
     "longitude": "111.31879",
@@ -397,7 +474,7 @@ var database = {
   }, {
     "name": "Richard Davis",
     "area": "Family Medicine",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Sleep Medicine",
     "review": 1.3,
     "gender": "Male",
     "longitude": "119.22171",
@@ -405,7 +482,7 @@ var database = {
   }, {
     "name": "Carl Bell",
     "area": "Family Medicine",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Geriatrics",
     "review": 2.3,
     "gender": "Male",
     "longitude": "-83.9622",
@@ -413,7 +490,7 @@ var database = {
   }, {
     "name": "Norma Morris",
     "area": "Family Medicine",
-    "speciality": "Physiology",
+    "specialty": "Sports Medicine",
     "review": 3.6,
     "gender": "Female",
     "longitude": "-75.45482",
@@ -421,7 +498,7 @@ var database = {
   }, {
     "name": "Mark Fox",
     "area": "Family Medicine",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Sleep Medicine",
     "review": 4.3,
     "gender": "Male",
     "longitude": "117.3368",
@@ -429,7 +506,7 @@ var database = {
   }, {
     "name": "George Lee",
     "area": "Dentistry",
-    "speciality": "Virology",
+    "specialty": "Endodontics",
     "review": 1.4,
     "gender": "Male",
     "longitude": "-101.4758",
@@ -437,7 +514,7 @@ var database = {
   }, {
     "name": "Patrick Jenkins",
     "area": "Dermatology",
-    "speciality": "Physiology",
+    "specialty": "Immunodermatology",
     "review": 1.1,
     "gender": "Male",
     "longitude": "118.03451",
@@ -445,7 +522,7 @@ var database = {
   }, {
     "name": "Anna Lynch",
     "area": "Family Medicine",
-    "speciality": "Physiology",
+    "specialty": "Geriatrics",
     "review": 4.0,
     "gender": "Female",
     "longitude": "-39.25139",
@@ -453,7 +530,7 @@ var database = {
   }, {
     "name": "Patricia Hansen",
     "area": "Dentistry",
-    "speciality": "Virology",
+    "specialty": "Orthodontics",
     "review": 4.5,
     "gender": "Female",
     "longitude": "21.71667",
@@ -461,15 +538,15 @@ var database = {
   }, {
     "name": "Nicholas Sanchez",
     "area": "Family Medicine",
-    "speciality": "Toxicology",
+    "specialty": "Sports Medicine",
     "review": 2.7,
     "gender": "Male",
     "longitude": "72.23369",
     "latitude": "55.70128"
   }, {
     "name": "Albert Rose",
-    "area": "General Surgery",
-    "speciality": "Anesthesiology",
+    "area": "Surgery",
+    "specialty": "Neurological",
     "review": 4.7,
     "gender": "Male",
     "longitude": "31.89961",
@@ -477,23 +554,23 @@ var database = {
   }, {
     "name": "Wayne Matthews",
     "area": "Dermatology",
-    "speciality": "Virology",
+    "specialty": "Phototherapy",
     "review": 3.1,
     "gender": "Male",
     "longitude": "0.1667",
     "latitude": "44.5"
   }, {
     "name": "Steven Ryan",
-    "area": "General Surgery",
-    "speciality": "Physiology",
+    "area": "Surgery",
+    "specialty": "Orthopaedic",
     "review": 2.3,
     "gender": "Male",
     "longitude": "10.4552",
     "latitude": "63.4365"
   }, {
     "name": "Fred Rodriguez",
-    "area": "General Surgery",
-    "speciality": "Anesthesiology",
+    "area": "Surgery",
+    "specialty": "Maxillofacial",
     "review": 4.0,
     "gender": "Male",
     "longitude": "111.891",
@@ -501,7 +578,7 @@ var database = {
   }, {
     "name": "Denise Howell",
     "area": "Psychiatry",
-    "speciality": "Anesthesiology",
+    "specialty": "Adolescent Psychiatry",
     "review": 2.1,
     "gender": "Female",
     "longitude": "24.5387",
@@ -509,7 +586,7 @@ var database = {
   }, {
     "name": "Ann Vasquez",
     "area": "Dentistry",
-    "speciality": "Orthodontics",
+    "specialty": "Periodontics",
     "review": 2.3,
     "gender": "Female",
     "longitude": "-98.9919",
@@ -517,7 +594,7 @@ var database = {
   }, {
     "name": "David Hunter",
     "area": "Psychiatry",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Geriatric Psychiatry",
     "review": 2.2,
     "gender": "Male",
     "longitude": "40.10259",
@@ -525,7 +602,7 @@ var database = {
   }, {
     "name": "Michael Murphy",
     "area": "Dentistry",
-    "speciality": "Orthodontics",
+    "specialty": "Endodontics",
     "review": 2.1,
     "gender": "Male",
     "longitude": "18.61547",
@@ -533,7 +610,7 @@ var database = {
   }, {
     "name": "Judith Russell",
     "area": "Psychiatry",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Addiction Psychiatry",
     "review": 4.1,
     "gender": "Female",
     "longitude": "-7.9833",
@@ -541,7 +618,7 @@ var database = {
   }, {
     "name": "Bobby Hicks",
     "area": "Dentistry",
-    "speciality": "Anesthesiology",
+    "specialty": "Orthodontics",
     "review": 4.5,
     "gender": "Male",
     "longitude": "136.78333",
@@ -549,7 +626,7 @@ var database = {
   }, {
     "name": "Christine Adams",
     "area": "Dentistry",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Periodontics",
     "review": 2.6,
     "gender": "Female",
     "longitude": "102.09924",
@@ -557,7 +634,7 @@ var database = {
   }, {
     "name": "Eugene Garrett",
     "area": "Psychiatry",
-    "speciality": "Anesthesiology",
+    "specialty": "Adolescent Psychiatry",
     "review": 1.3,
     "gender": "Male",
     "longitude": "123.6637",
@@ -565,15 +642,15 @@ var database = {
   }, {
     "name": "Bonnie Alexander",
     "area": "Dermatology",
-    "speciality": "Virology",
+    "specialty": "Dermatopathology",
     "review": 1.7,
     "gender": "Female",
     "longitude": "-8.6333",
     "latitude": "41.4"
   }, {
     "name": "Bruce Peters",
-    "area": "General Surgery",
-    "speciality": "Physiology",
+    "area": "Surgery",
+    "specialty": "Neurological",
     "review": 2.8,
     "gender": "Male",
     "longitude": "6.6966",
@@ -581,7 +658,7 @@ var database = {
   }, {
     "name": "Christopher Smith",
     "area": "Dermatology",
-    "speciality": "Physiology",
+    "specialty": "Immunodermatology",
     "review": 2.2,
     "gender": "Male",
     "longitude": "114.20354",
@@ -589,7 +666,7 @@ var database = {
   }, {
     "name": "Anna Collins",
     "area": "Psychiatry",
-    "speciality": "Physiology",
+    "specialty": "Geriatric Psychiatry",
     "review": 4.8,
     "gender": "Female",
     "longitude": "23.33583",
@@ -597,23 +674,23 @@ var database = {
   }, {
     "name": "Jason Harvey",
     "area": "Dermatology",
-    "speciality": "Virology",
+    "specialty": "Phototherapy",
     "review": 2.5,
     "gender": "Male",
     "longitude": "116.35886",
     "latitude": "25.84231"
   }, {
     "name": "Charles Dunn",
-    "area": "General Surgery",
-    "speciality": "Abdominal Surgeon",
+    "area": "Surgery",
+    "specialty": "Orthopaedic",
     "review": 4.9,
     "gender": "Male",
     "longitude": "14.5753",
     "latitude": "56.0521"
   }, {
     "name": "Marilyn Morales",
-    "area": "General Surgery",
-    "speciality": "Toxicology",
+    "area": "Surgery",
+    "specialty": "Maxillofacial",
     "review": 2.6,
     "gender": "Female",
     "longitude": "-72.4175",
@@ -621,15 +698,15 @@ var database = {
   }, {
     "name": "Andrea Sullivan",
     "area": "Family Medicine",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Sleep Medicine",
     "review": 1.4,
     "gender": "Female",
     "longitude": "-39.28444",
     "latitude": "-14.59306"
   }, {
     "name": "Cheryl Stanley",
-    "area": "General Surgery",
-    "speciality": "Abdominal Surgeon",
+    "area": "Surgery",
+    "specialty": "Neurological",
     "review": 2.9,
     "gender": "Female",
     "longitude": "30.19978",
@@ -637,7 +714,7 @@ var database = {
   }, {
     "name": "Diana Gonzalez",
     "area": "Dentistry",
-    "speciality": "Toxicology",
+    "specialty": "Endodontics",
     "review": 3.5,
     "gender": "Female",
     "longitude": "22.01167",
@@ -645,7 +722,7 @@ var database = {
   }, {
     "name": "Rachel Gonzales",
     "area": "Dentistry",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Orthodontics",
     "review": 3.0,
     "gender": "Female",
     "longitude": "107.50092",
@@ -653,7 +730,7 @@ var database = {
   }, {
     "name": "Thomas Howell",
     "area": "Psychiatry",
-    "speciality": "Virology",
+    "specialty": "Addiction Psychiatry",
     "review": 1.4,
     "gender": "Male",
     "longitude": "2.6333",
@@ -661,15 +738,15 @@ var database = {
   }, {
     "name": "Lori Jordan",
     "area": "Family Medicine",
-    "speciality": "Physiology",
+    "specialty": "Geriatrics",
     "review": 2.4,
     "gender": "Female",
     "longitude": "-8.2333",
     "latitude": "39.3833"
   }, {
     "name": "Roger Stephens",
-    "area": "General Surgery",
-    "speciality": "Anesthesiology",
+    "area": "Surgery",
+    "specialty": "Orthopaedic",
     "review": 3.1,
     "gender": "Male",
     "longitude": "120.26131",
@@ -677,7 +754,7 @@ var database = {
   }, {
     "name": "Adam Fields",
     "area": "Dermatology",
-    "speciality": "Toxicology",
+    "specialty": "Dermatopathology",
     "review": 2.0,
     "gender": "Male",
     "longitude": "35.42287",
@@ -685,7 +762,7 @@ var database = {
   }, {
     "name": "George Davis",
     "area": "Dermatology",
-    "speciality": "Orthodontics",
+    "specialty": "Immunodermatology",
     "review": 3.7,
     "gender": "Male",
     "longitude": "28.28224",
@@ -693,7 +770,7 @@ var database = {
   }, {
     "name": "Martin Meyer",
     "area": "Family Medicine",
-    "speciality": "Toxicology",
+    "specialty": "Sports Medicine",
     "review": 4.0,
     "gender": "Male",
     "longitude": "-53.49139",
@@ -701,7 +778,7 @@ var database = {
   }, {
     "name": "Rebecca Bowman",
     "area": "Dermatology",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Phototherapy",
     "review": 3.1,
     "gender": "Female",
     "longitude": "14.85444",
@@ -709,7 +786,7 @@ var database = {
   }, {
     "name": "Jeremy Kennedy",
     "area": "Dermatology",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Dermatopathology",
     "review": 1.4,
     "gender": "Male",
     "longitude": "-48.71917",
@@ -717,7 +794,7 @@ var database = {
   }, {
     "name": "Barbara Garcia",
     "area": "Dermatology",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Immunodermatology",
     "review": 1.8,
     "gender": "Female",
     "longitude": "-101.9372",
@@ -725,7 +802,7 @@ var database = {
   }, {
     "name": "Joan Lopez",
     "area": "Dermatology",
-    "speciality": "Anesthesiology",
+    "specialty": "Phototherapy",
     "review": 4.1,
     "gender": "Female",
     "longitude": "123.5819",
@@ -733,7 +810,7 @@ var database = {
   }, {
     "name": "Timothy Carr",
     "area": "Family Medicine",
-    "speciality": "Physiology",
+    "specialty": "Sleep Medicine",
     "review": 3.4,
     "gender": "Male",
     "longitude": "-8.8167",
@@ -741,15 +818,15 @@ var database = {
   }, {
     "name": "Sara Schmidt",
     "area": "Dermatology",
-    "speciality": "Physiology",
+    "specialty": "Dermatopathology",
     "review": 3.5,
     "gender": "Female",
     "longitude": "-8.2378",
     "latitude": "40.9349"
   }, {
     "name": "Charles Black",
-    "area": "General Surgery",
-    "speciality": "Anatomical Pathology",
+    "area": "Surgery",
+    "specialty": "Maxillofacial",
     "review": 3.5,
     "gender": "Male",
     "longitude": "25.08333",
@@ -757,7 +834,7 @@ var database = {
   }, {
     "name": "Timothy Larson",
     "area": "Family Medicine",
-    "speciality": "Anesthesiology",
+    "specialty": "Geriatrics",
     "review": 4.5,
     "gender": "Male",
     "longitude": "114.60396",
@@ -765,23 +842,23 @@ var database = {
   }, {
     "name": "Harold Vasquez",
     "area": "Dentistry",
-    "speciality": "Toxicology",
+    "specialty": "Periodontics",
     "review": 4.0,
     "gender": "Male",
     "longitude": "45.25693",
     "latitude": "-12.78339"
   }, {
     "name": "Angela Matthews",
-    "area": "General Surgery",
-    "speciality": "Orthodontics",
+    "area": "Surgery",
+    "specialty": "Neurological",
     "review": 4.5,
     "gender": "Female",
     "longitude": "-96.7776",
     "latitude": "32.7673"
   }, {
     "name": "Ann Thompson",
-    "area": "General Surgery",
-    "speciality": "Physiology",
+    "area": "Surgery",
+    "specialty": "Orthopaedic",
     "review": 1.4,
     "gender": "Female",
     "longitude": "13.9582",
@@ -789,7 +866,7 @@ var database = {
   }, {
     "name": "Theresa Powell",
     "area": "Psychiatry",
-    "speciality": "Anesthesiology",
+    "specialty": "Adolescent Psychiatry",
     "review": 4.3,
     "gender": "Female",
     "longitude": "131.36667",
@@ -797,7 +874,7 @@ var database = {
   }, {
     "name": "Harold Long",
     "area": "Psychiatry",
-    "speciality": "Anatomical Pathology",
+    "specialty": "Geriatric Psychiatry",
     "review": 2.7,
     "gender": "Male",
     "longitude": "112.5234",
@@ -805,7 +882,7 @@ var database = {
   }, {
     "name": "Victor Harris",
     "area": "Psychiatry",
-    "speciality": "Physiology",
+    "specialty": "Addiction Psychiatry",
     "review": 2.9,
     "gender": "Male",
     "longitude": "122.0853",
@@ -813,7 +890,7 @@ var database = {
   }, {
     "name": "Mary Morales",
     "area": "Dentistry",
-    "speciality": "Abdominal Surgeon",
+    "specialty": "Endodontics",
     "review": 1.1,
     "gender": "Female",
     "longitude": "125.70083",
@@ -821,7 +898,7 @@ var database = {
   }, {
     "name": "George Ruiz",
     "area": "Dentistry",
-    "speciality": "Toxicology",
+    "specialty": "Orthodontics",
     "review": 3.6,
     "gender": "Male",
     "longitude": "38.91667",
@@ -829,7 +906,7 @@ var database = {
   }, {
     "name": "Michael Watkins",
     "area": "Dermatology",
-    "speciality": "Cardiac Surgeon",
+    "specialty": "Immunodermatology",
     "review": 4.1,
     "gender": "Male",
     "longitude": "18.37222",
@@ -837,76 +914,18 @@ var database = {
   }, {
     "name": "Ashley Alexander",
     "area": "Family Medicine",
-    "speciality": "Physiology",
+    "specialty": "Sports Medicine",
     "review": 4.8,
     "gender": "Female",
     "longitude": "-80.63333",
     "latitude": "8.16667"
   }, {
     "name": "Gerald Howard",
-    "area": "General Surgery",
-    "speciality": "Toxicology",
+    "area": "Surgery",
+    "specialty": "Maxillofacial",
     "review": 2.5,
     "gender": "Male",
     "longitude": "7.9455",
     "latitude": "49.0371"
   }]
-  
-  
-  // [
-  //   {
-  //     'name': 'Pierre Fauchard',
-  //     'specialty': 'Orthodontics',
-  //     'area': 'Physician',
-  //     'review': 4.1 
-  //   },
-  //   {
-  //     'name': 'Jean-Martin Charcot',
-  //     'specialty': 'Anatomical Pathology',
-  //     'area': 'Neurologist',
-  //     'review': 4.6  
-  //   },
-  //   {
-  //     'name': 'Jonas Salk',
-  //     'specialty': 'Virology',
-  //     'area': 'Medical Research',
-  //     'review': 4.3  
-  //   },
-  //   {
-  //     'name': 'William Harvey',
-  //     'specialty': 'Physiology',
-  //     'area': 'Physician',
-  //     'review': 3.2  
-  //   },
-  //   {
-  //     'name': 'Rosalyn Sussman Yalow',
-  //     'specialty': 'Physiology',
-  //     'area': 'Physician',
-  //     'review': 4.7 
-  //   },
-  //   {
-  //     'name': 'Virginia Apgar',
-  //     'specialty': 'Anesthesiology',
-  //     'area': 'Anesthesiologist',
-  //     'review': 4.4 
-  //   },
-  //   {
-  //     'name': 'Christiaan Barnard',
-  //     'specialty': 'Cardiac Surgeon',
-  //     'area': 'Surgeon',
-  //     'review': 4.6 
-  //   },
-  //   {
-  //     'name': 'Theodor Billroth',
-  //     'specialty': 'Abdominal Surgeon',
-  //     'area': 'Surgeon',
-  //     'review': 3.8 
-  //   },
-  //   {
-  //     'name': 'Paracelsus',
-  //     'specialty': 'Toxicology',
-  //     'area': 'Physician',
-  //     'review': 2.6 
-  //   }
-  // ]
 };
