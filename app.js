@@ -1,57 +1,101 @@
 
 $(document).ready(function(){
   
-    // Selects dropdown element
-    var $areaDropdown = $('#area-dropdown'),
-        $specialtyDropdown = $('#specialty-dropdown'),
-        fields = {
-          '-': ['-'],
-          'Dentistry': ['All', 'Endodontics', 'Orthodontics', 'Periodontics'],
-          'Dermatology': ['All', 'Dermatopathology', 'Immunodermatology', 'Phototherapy'],
-          'Family Medicine': ['All', 'Geriatrics', 'Sports Medicine', 'Sleep Medicine'],
-          'Surgery': ['All', 'Orthopaedic', 'Maxillofacial', 'Neurological'],
-          'Psychiatry': ['All', 'Geriatric Psychiatry', 'Addiction Psychiatry', 'Adolescent Psychiatry']
-        },
-				$doctorList = $('#doctor-list'),
-				currentFilter = ['review', 'ASC'],
-				currentArea = '';
-        
-    // Populates area dropdown
-    for (var key in fields) {
-      // Builds Dropdown with area names
-      $('<option>').val(key).text(key).appendTo($areaDropdown);
-    }
-    
-    // Invokes selectedSpecialty with selected area
-    $areaDropdown.change(function(){
-		 	currentArea = $(this).val();
-      selectedSpecialty($(this).val());
-    });
-    
-    var selectedSpecialty = function(area){
-      // Clears previous specialties
-      $($specialtyDropdown).find('option').remove().end();
-      // Populates specialty dropdown
-      for ( var i = 0; i < fields[area].length; i++ ) {
-        $('<option>').val(fields[area][i]).text(fields[area][i]).appendTo($specialtyDropdown);
-      }
-			// Populates doctors with same area
-			populateAreaDoctors(area);
-    };
-    
-    // Invokes populateDoctors with selected area
-    $specialtyDropdown.change(function(){
-		 	if ( $(this).val() === 'All' ) {
-				populateAreaDoctors(currentArea);
-			} else {
-      	populateSpecialtyDoctors($(this).val());
-    	}
-		});
+	// Selects dropdown element
+  var $areaDropdown = $('#area-dropdown'),
+  		$specialtyDropdown = $('#specialty-dropdown'),
+			//$name = $('.table thead tr td:eq(0)')[0],
+  		$name = $('#name'),
+			$review = $('#review'),
+			$gender = $('#gender'),
+			fields = {
+        '-': ['-'],
+        'Dentistry': ['All', 'Endodontics', 'Orthodontics', 'Periodontics'],
+        'Dermatology': ['All', 'Dermatopathology', 'Immunodermatology', 'Phototherapy'],
+        'Family Medicine': ['All', 'Geriatrics', 'Sports Medicine', 'Sleep Medicine'],
+        'Surgery': ['All', 'Orthopaedic', 'Maxillofacial', 'Neurological'],
+        'Psychiatry': ['All', 'Geriatric Psychiatry', 'Addiction Psychiatry', 'Adolescent Psychiatry']
+      },
+			$doctorList = $('#doctor-list'),
+			currentFilter = {
+			 	'type': 'review', 
+				'order': 'DSC'
+			},
+			currentArea = '',
+			currentSpecilty = '',
+			currentList = null;
 
-		// Sorts doctors by area
-		var populateAreaDoctors = function(area) {
-			// Stores areas
-		 	var areas = [];
+	// Updates currentFilter alphabetically
+	$name.click(function() {
+	 	// Update DOM [A-Z] / [Z-A]
+	 
+	 	// Toggles alphabetical filter by ascending / descending
+		currentFilter.type === 'name' && currentFilter.order === 'ASC' ? 
+	 		currentFilter = {'type': 'name', 'order': 'DSC'} : 
+	 		currentFilter = {'type': 'name', 'order': 'ASC'};
+		console.log(currentFilter);
+		// Builds current list
+		buildList(currentList, currentFilter);
+	});
+
+	$review.click(function() {
+		// <span class='glyphicon glyphicon-triangle-bottom' aria-hidden='true'></span>
+	 	// Update DOM arrow ( ref above )
+	 	
+	 	// Toggles review filter by ascending / descending
+	 	currentFilter.type === 'review' && currentFilter.order === 'ASC' ?
+	 		currentFilter = {'type': 'review', 'order': 'DSC'} :
+	 		currentFilter = {'type': 'review', 'order': 'ASC'};
+		console.log(currentFilter);
+		buildList(currentList, currentFilter);
+	});
+
+	// Populates area dropdown
+  for (var key in fields) {
+  	// Builds Dropdown with area names
+    $('<option>').val(key).text(key).appendTo($areaDropdown);
+  }
+
+  // Invokes selectedSpecialty with selected area
+  $areaDropdown.change(function() {
+		// Stores selected area
+	 	currentArea = $(this).val();
+		// Builds specialty dropdown with area
+    selectedSpecialty($(this).val());
+  });
+
+	// Builds specialty dropdown based on selected area
+  var selectedSpecialty = function(area) {
+  	// Clears previous specialties
+    $($specialtyDropdown).find('option').remove().end();
+    // Populates specialty dropdown
+    for ( var i = 0; i < fields[area].length; i++ ) {
+    	$('<option>').val(fields[area][i]).text(fields[area][i]).appendTo($specialtyDropdown);
+    }
+		// Populates doctors with same area
+		populateAreaDoctors(area);
+  };
+
+  // Invokes populateDoctors with selected area
+  $specialtyDropdown.change(function() {
+		// Stores selected specialty
+	 	currentSpecialty = $(this).val();
+	 	// Checks selection
+		if ( $(this).val() === 'All' ) {
+			// Populates all doctors of the current area
+		 	populateAreaDoctors(currentArea);
+		} else {
+		 	// Populates doctors of specific specialty
+    	populateSpecialtyDoctors($(this).val());
+    }
+	});
+
+	// Sorts doctors by area
+	var populateAreaDoctors = function(area) {
+		// Stores areas
+		var areas = [];
+	 	// Makes sure something was selected from dropdown
+	 	if ( area !== '-' ) {
 			// Filters doctors by area only
 			database.doctors.forEach(function(val) {
 				if ( val['area'] === area) {
@@ -60,66 +104,77 @@ $(document).ready(function(){
 			});
 			// Sorts filtered areas by current filter
 			sortList(areas, currentFilter);
-			// Invokes appendList with sorted area doctors 
-			appendList(areas);
-		};
+		}
+		// Updates current list of doctors
+		currentList = areas;
+		// Builds current list
+		buildList(currentList, currentFilter);
+	};
     
-    // Sorts doctors by specialty
-    var populateSpecialtyDoctors = function(specialty) {
-      // Stores specialists
-      var specialtists = [];
-      // Filters doctors by specialty only    
-      database.doctors.forEach(function(val) {
-        if ( val['specialty'] === specialty) {
-          specialtists.push(val);
-        }
-      });
-      // Sorts filtered specialists by rating (highest > lowest)
-      specialtists.sort(function(a, b) {
-        return b.review - a.review;
-      });
-      // Invokes appendList with sorted specialists array
-			appendList(specialtists);      
-    };
+	// Sorts doctors by specialty
+  var populateSpecialtyDoctors = function(specialty) {
+  	// Stores specialists
+    var specialists = [];
+    // Filters doctors by specialty only    
+    database.doctors.forEach(function(val) {
+    	if ( val['specialty'] === specialty) {
+    		specialists.push(val);
+    	}
+    });
+		// Updates currentList of doctors
+		currentList = specialists;
+		// Builds current list
+		buildList(currentList, currentFilter);
+	};
     
-    // Append list function, takes in a sorted array
-    var appendList = function(array) {
-      // Clears out doctor list
-			$doctorList.empty();
-		 	// Appends each doctor to table
-		 	array.forEach(function(val) {
-		 		$doctorList.append('<tr><td>' + val.name + '</td>' +
-				 	'<td>' + val.area + '</td>' +
+  // Append list function, takes in a sorted array
+  var appendList = function(array) {
+  	// Clears out doctor list
+		$doctorList.empty();
+		// Makes sure array contains at least 1 doctor
+		if ( array.length >= 1 ) {
+			// Appends each doctor to table
+			array.forEach(function(val) {
+				$doctorList.append('<tr><td>' + val.name + '</td>' +
+					'<td>' + val.area + '</td>' +
 					'<td>' + val.specialty + '</td>' +
 					'<td>' + val.review + '</td>' +
 					'<td>' + val.gender + '</td></tr>');	 
 			});
-    };
-   	
-		var sortList = function(array, filter) {
-		 	// Stores type of filter
-		 	var type = filter[0],
-			// Stores types order
-					order = filter[1];
-			// Review
-			if ( type === 'review' && order === 'DSC') {
-				return array.sort(function(a, b) {
-					return b[type] - a[type];
-				});
-			} else if ( type === 'review' && order === 'ASC' ) {
-				return array.sort(function(a, b) {
-					return a[type] - b[type];
-				});
-			}
-			// Gender
-			// Name
-		};
+		}
+  };
+
+	// Sorts any list based on currently set filter
+	var sortList = function(array, filter) {
+		// Stores type of filter
+		var type = filter.type,
+		// Stores types order
+				order = filter.order;
+		// Review Sort
+		if ( type === 'review' && order === 'DSC') {
+			return array.sort(function(a, b) {
+				return b[type] - a[type];
+			});
+		} else if ( type === 'review' && order === 'ASC' ) {
+			return array.sort(function(a, b) {
+				return a[type] - b[type];
+			});
+		}
+		// Gender
+		// Name
+	};
 
 		// Sorting Priority
     	// Default Sort: Area > Specialty > Review (highest > lowest)
       // Filter Options: Review | Gender | Location
         // Review: Toggle (highest > lowest) / (lowest > highest)
         // Gender: M / F
+	
+	// Builds DOM with current list and filters
+	var buildList = function(list, filters) {
+		sortList(list, filters);
+		appendList(list);
+	};
 
 });
 
