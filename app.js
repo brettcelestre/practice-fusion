@@ -167,14 +167,15 @@ $(document).ready(function(){
 				order = filter.order;
 		// Makes sure the array exists
 		if ( array ) {
+		 	
 		 	// Review Sort
-			// Sorts by review: descending
 		 	if ( type === 'review' && order === 'DSC') {
+			// Sorts by review: descending
 				return array.sort(function(a, b) {
 					return b[type] - a[type];
 				});
-			// Sorts by review: ascending
 			} else if ( type === 'review' && order === 'ASC' ) {
+			// Sorts by review: ascending
 				return array.sort(function(a, b) {
 					return a[type] - b[type];
 				});
@@ -214,20 +215,39 @@ $(document).ready(function(){
 			
 			// Name Sort
 			if ( type === 'name' && order  === 'DSC' ) {
-
+			  // Sorts names in descending order
+				array.sort(function(a, b){
+					if(a.name < b.name) return -1;
+					if(a.name > b.name) return 1;
+					return 0;
+				});
+				currentList = array;
 			} else if ( type === 'name' && order === 'ASC' ) {
-
+			 	// Sorts names in ascending order
+				array.sort(function(a, b) {
+					if ( a.name < b.name ) return 1;
+					if ( a.name > b.name ) return -1;
+					return 0;
+				});
+				currentList = array;
 			}
 		}
 	};
 
 		// Sorting Priority
     	// Default Sort: Area > Specialty > Review: descending
-      // Filter Options: Review | Gender | Location
+      // Filter Options: Review | Gender | Name
+				// Name: 	 Toggle Descending /Ascending
         // Review: Toggle Descending / Ascending
         // Gender: Toggle F-M / M-F
 					// By default, gender's secondary sort is by review: descending
-	
+			
+			// Future additions:
+				// Filter by location. I ran out of time, but you may have noticed
+				// I added longitude/latitude property/values to my JSON dataset.
+				// I would have added an input for the users ZIP code, then allowed
+				// you to filter by nearest/furtherst doctor to your location.
+
 	// Builds DOM with current list and filters
 	var buildList = function(list, filters) {
 		sortList(list, filters);
