@@ -4,7 +4,6 @@ $(document).ready(function(){
 	// Selects dropdown element
   var $areaDropdown = $('#area-dropdown'),
   		$specialtyDropdown = $('#specialty-dropdown'),
-			//$name = $('.table thead tr td:eq(0)')[0],
   		$name = $('#name'),
 			$review = $('#review'),
 			$gender = $('#gender'),
@@ -17,13 +16,19 @@ $(document).ready(function(){
         'Psychiatry': ['All', 'Geriatric Psychiatry', 'Addiction Psychiatry', 'Adolescent Psychiatry']
       },
 			$doctorList = $('#doctor-list'),
+			// Current filter parameters
 			currentFilter = {
 			 	'type': 'review', 
 				'order': 'DSC'
 			},
+			// Currently selected area
 			currentArea = '',
+			// Currently selected specialty
 			currentSpecilty = '',
-			currentList = null;
+			// Stores most recent list of doctors based on currentFilters
+			currentList = null,
+			// Stores complete list
+			currentGenderList = null;
 
 	// Updates currentFilter alphabetically
 	$name.click(function() {
@@ -33,7 +38,6 @@ $(document).ready(function(){
 		currentFilter.type === 'name' && currentFilter.order === 'ASC' ? 
 	 		currentFilter = {'type': 'name', 'order': 'DSC'} : 
 	 		currentFilter = {'type': 'name', 'order': 'ASC'};
-		console.log(currentFilter);
 		// Builds current list
 		buildList(currentList, currentFilter);
 	});
@@ -46,7 +50,18 @@ $(document).ready(function(){
 	 	currentFilter.type === 'review' && currentFilter.order === 'ASC' ?
 	 		currentFilter = {'type': 'review', 'order': 'DSC'} :
 	 		currentFilter = {'type': 'review', 'order': 'ASC'};
-		console.log(currentFilter);
+		// Builds current list
+		buildList(currentList, currentFilter);
+	});
+
+	$gender.click(function() {
+		// Update DOM [M-F] / [F-M]
+
+	 	// Toggles gender filter by Male / Female
+		currentFilter.type === 'gender' && currentFilter.order === 'F' ?
+	 		currentFilter = {'type': 'gender', 'order': 'M'} :
+	 		currentFilter = {'type': 'gender', 'order': 'F'};
+		// Builds current list
 		buildList(currentList, currentFilter);
 	});
 
@@ -131,8 +146,8 @@ $(document).ready(function(){
   var appendList = function(array) {
   	// Clears out doctor list
 		$doctorList.empty();
-		// Makes sure array contains at least 1 doctor
-		if ( array.length >= 1 ) {
+		// Makes sure array exists and contains at least 1 doctor
+		if ( array && array.length >= 1 ) {
 			// Appends each doctor to table
 			array.forEach(function(val) {
 				$doctorList.append('<tr><td>' + val.name + '</td>' +
@@ -150,30 +165,73 @@ $(document).ready(function(){
 		var type = filter.type,
 		// Stores types order
 				order = filter.order;
-		// Review Sort
-		if ( type === 'review' && order === 'DSC') {
-			return array.sort(function(a, b) {
-				return b[type] - a[type];
-			});
-		} else if ( type === 'review' && order === 'ASC' ) {
-			return array.sort(function(a, b) {
-				return a[type] - b[type];
-			});
+		// Makes sure the array exists
+		if ( array ) {
+		 	// Review Sort
+			// Sorts by review: descending
+		 	if ( type === 'review' && order === 'DSC') {
+				return array.sort(function(a, b) {
+					return b[type] - a[type];
+				});
+			// Sorts by review: ascending
+			} else if ( type === 'review' && order === 'ASC' ) {
+				return array.sort(function(a, b) {
+					return a[type] - b[type];
+				});
+			}
+
+			// Gender Sort
+			if ( type === 'gender' ) {
+				// Sorts and stores all females
+				var female = [];
+				array.forEach(function(val) {
+					if ( val[type] === 'Female' ) {
+						female.push(val);
+					}
+				});
+				// Sorts females by review - descending
+				sortList(female, {'type': 'review', 'order': 'DSC'});
+				// Sorts and stores all males
+				var male = [];
+				array.forEach(function(val) {
+		 		 	if ( val[type] === 'Male') {
+						male.push(val);
+					}
+				});
+				// Sorts males by review - descending
+				sortList(male, {'type': 'review', 'order': 'DSC'});
+				// Orders M-F or F-M
+				if ( order === 'F' ) {
+				 	// Combines sorted gender arrays, female-male
+					var femaleSort = female.concat(male);
+					currentList = femaleSort;
+				} else if ( order === 'M' ) {
+					// Combines sorted gender arrays, male-female
+				 	var maleSort = male.concat(female);
+					currentList = maleSort;
+				}
+			}
+			
+			// Name Sort
+			if ( type === 'name' && order  === 'DSC' ) {
+
+			} else if ( type === 'name' && order === 'ASC' ) {
+
+			}
 		}
-		// Gender
-		// Name
 	};
 
 		// Sorting Priority
-    	// Default Sort: Area > Specialty > Review (highest > lowest)
+    	// Default Sort: Area > Specialty > Review: descending
       // Filter Options: Review | Gender | Location
-        // Review: Toggle (highest > lowest) / (lowest > highest)
-        // Gender: M / F
+        // Review: Toggle Descending / Ascending
+        // Gender: Toggle F-M / M-F
+					// By default, gender's secondary sort is by review: descending
 	
 	// Builds DOM with current list and filters
 	var buildList = function(list, filters) {
 		sortList(list, filters);
-		appendList(list);
+		appendList(currentList);
 	};
 
 });
