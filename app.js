@@ -32,35 +32,57 @@ $(document).ready(function(){
 
 	// Updates currentFilter alphabetically
 	$name.click(function() {
-	 	// Update DOM [A-Z] / [Z-A]
-	 
+		// Clears other DOM filter indicators
+		$review.html('<strong>Review</strong>');
+		$gender.html('<strong>Gender</strong>');
 	 	// Toggles alphabetical filter by ascending / descending
 		currentFilter.type === 'name' && currentFilter.order === 'ASC' ? 
 	 		currentFilter = {'type': 'name', 'order': 'DSC'} : 
 	 		currentFilter = {'type': 'name', 'order': 'ASC'};
+		// Updates Name button based on filter type
+		if ( currentFilter.order === 'DSC' ) {
+			$name.html('<strong>Name [A-Z]</strong>');
+		} else if ( currentFilter.order === 'ASC' ) {
+			$name.html('<strong>Name [Z-A]</strong>');
+		}
 		// Builds current list
 		buildList(currentList, currentFilter);
 	});
 
+	// Review filter toggle
 	$review.click(function() {
-		// <span class='glyphicon glyphicon-triangle-bottom' aria-hidden='true'></span>
-	 	// Update DOM arrow ( ref above )
-	 	
+		// Clears other DOM filter indicators	
+		$name.html('<strong>Name</strong>');
+		$gender.html('<strong>Gender</strong>');
 	 	// Toggles review filter by ascending / descending
 	 	currentFilter.type === 'review' && currentFilter.order === 'ASC' ?
 	 		currentFilter = {'type': 'review', 'order': 'DSC'} :
 	 		currentFilter = {'type': 'review', 'order': 'ASC'};
+		// Updates Review button based on filter type
+		if ( currentFilter.order === 'DSC' ) {
+			$review.html("<strong>Review </strong><span class='glyphicon glyphicon-triangle-bottom' aria-hidden='true'></span></strong>");
+		} else if ( currentFilter.order === 'ASC' ) {
+			$review.html("<strong>Review </strong><span class='glyphicon glyphicon-triangle-top' aria-hidden='true'></span></strong>");
+		}
 		// Builds current list
 		buildList(currentList, currentFilter);
 	});
 
+	// Gender filter toggle
 	$gender.click(function() {
-		// Update DOM [M-F] / [F-M]
-
+		// Clears other DOM filter indicators
+		$name.html('<strong>Name</strong>');
+		$review.html('<strong>Review</strong>');
 	 	// Toggles gender filter by Male / Female
 		currentFilter.type === 'gender' && currentFilter.order === 'F' ?
 	 		currentFilter = {'type': 'gender', 'order': 'M'} :
 	 		currentFilter = {'type': 'gender', 'order': 'F'};
+		// Updates Gender button based on filter type
+		if ( currentFilter.order === 'M' ) {
+			$gender.html('<strong>Gender [M-F]</strong>');
+		} else if ( currentFilter.order === 'F' ) {
+			$gender.html('<strong>Gender [F-M]</strong>');
+		}
 		// Builds current list
 		buildList(currentList, currentFilter);
 	});
