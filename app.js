@@ -1,282 +1,314 @@
 
 $(document).ready(function(){
   
-	// Selects dropdown element
+  // Selects dropdown element
   var $areaDropdown = $('#area-dropdown'),
-  		$specialtyDropdown = $('#specialty-dropdown'),
-  		$name = $('#name'),
-			$review = $('#review'),
-			$gender = $('#gender'),
-			fields = {
+      $specialtyDropdown = $('#specialty-dropdown'),
+      $name = $('#name'),
+      $review = $('#review'),
+      $area = $('#area'),
+      $specialty = $('#specialty'),
+      $gender = $('#gender'),
+      $doctorList = $('#doctor-list'),
+      // Current filter parameters
+      currentFilter = {
+          'type': 'review', 
+          'order': 'DSC'
+      },
+      // Currently selected area
+      currentArea = '',
+      // Currently selected specialty
+      currentSpecilty = '',
+      // Stores most recent list of doctors based on currentFilters
+      currentList = null,
+      // Stores complete list
+      currentGenderList = null,
+      fields = {
         '-': ['-'],
         'Dentistry': ['All', 'Endodontics', 'Orthodontics', 'Periodontics'],
         'Dermatology': ['All', 'Dermatopathology', 'Immunodermatology', 'Phototherapy'],
         'Family Medicine': ['All', 'Geriatrics', 'Sports Medicine', 'Sleep Medicine'],
         'Surgery': ['All', 'Orthopaedic', 'Maxillofacial', 'Neurological'],
         'Psychiatry': ['All', 'Geriatric Psychiatry', 'Addiction Psychiatry', 'Adolescent Psychiatry']
-      },
-			$doctorList = $('#doctor-list'),
-			// Current filter parameters
-			currentFilter = {
-			 	'type': 'review', 
-				'order': 'DSC'
-			},
-			// Currently selected area
-			currentArea = '',
-			// Currently selected specialty
-			currentSpecilty = '',
-			// Stores most recent list of doctors based on currentFilters
-			currentList = null,
-			// Stores complete list
-			currentGenderList = null;
+      };
 
-	// Updates currentFilter alphabetically
-	$name.click(function() {
-		// Clears other DOM filter indicators
-		$review.html('<strong>Review</strong>');
-		$gender.html('<strong>Gender</strong>');
-	 	// Toggles alphabetical filter by ascending / descending
-		currentFilter.type === 'name' && currentFilter.order === 'ASC' ? 
-	 		currentFilter = {'type': 'name', 'order': 'DSC'} : 
-	 		currentFilter = {'type': 'name', 'order': 'ASC'};
-		// Updates Name button based on filter type
-		if ( currentFilter.order === 'DSC' ) {
-			$name.html('<strong>Name [A-Z]</strong>');
-		} else if ( currentFilter.order === 'ASC' ) {
-			$name.html('<strong>Name [Z-A]</strong>');
-		}
-		// Builds current list
-		buildList(currentList, currentFilter);
-	});
+  // Updates currentFilter alphabetically
+  $name.click(function() {
+    // Clears other DOM filter indicators
+    $review.html('<strong>Review Score</strong>');
+    $gender.html('<strong>Gender</strong>');
+    // Toggles alphabetical filter by ascending / descending
+    currentFilter.type === 'name' && currentFilter.order === 'ASC' ? 
+      currentFilter = {'type': 'name', 'order': 'DSC'} : 
+      currentFilter = {'type': 'name', 'order': 'ASC'};
+    // Updates Name button based on filter type
+    if ( currentFilter.order === 'DSC' ) {
+      $name.html('<strong>Name [A-Z]</strong>');
+    } else if ( currentFilter.order === 'ASC' ) {
+      $name.html('<strong>Name [Z-A]</strong>');
+    }
+    // Builds current list
+    buildList(currentList, currentFilter);
+  }).hover(function(){
+    $(this).css("background", "#b3ecff")
+      .css("border-radius", "1px")
+      .css('cursor', 'pointer');
+  }).mouseleave(function() {
+      $(this).css("background", "000").css("border-radius", "0px");
+  });
 
-	// Review filter toggle
-	$review.click(function() {
-		// Clears other DOM filter indicators	
-		$name.html('<strong>Name</strong>');
-		$gender.html('<strong>Gender</strong>');
-	 	// Toggles review filter by ascending / descending
-	 	currentFilter.type === 'review' && currentFilter.order === 'ASC' ?
-	 		currentFilter = {'type': 'review', 'order': 'DSC'} :
-	 		currentFilter = {'type': 'review', 'order': 'ASC'};
-		// Updates Review button based on filter type
-		if ( currentFilter.order === 'DSC' ) {
-			$review.html("<strong>Review </strong><span class='glyphicon glyphicon-triangle-bottom' aria-hidden='true'></span></strong>");
-		} else if ( currentFilter.order === 'ASC' ) {
-			$review.html("<strong>Review </strong><span class='glyphicon glyphicon-triangle-top' aria-hidden='true'></span></strong>");
-		}
-		// Builds current list
-		buildList(currentList, currentFilter);
-	});
+  // Review filter toggle
+  $review.click(function() {
+    // Clears other DOM filter indicators 
+    $name.html('<strong>Name</strong>');
+    $gender.html('<strong>Gender</strong>');
+    // Toggles review filter by ascending / descending
+    currentFilter.type === 'review' && currentFilter.order === 'ASC' ?
+      currentFilter = {'type': 'review', 'order': 'DSC'} :
+      currentFilter = {'type': 'review', 'order': 'ASC'};
+    // Updates Review button based on filter type
+    if ( currentFilter.order === 'DSC' ) {
+      $review.html("<strong>Review Score </strong><span class='glyphicon glyphicon-triangle-bottom' aria-hidden='true'></span></strong>");
+    } else if ( currentFilter.order === 'ASC' ) {
+      $review.html("<strong>Review Score </strong><span class='glyphicon glyphicon-triangle-top' aria-hidden='true'></span></strong>");
+    }
+    // Builds current list
+    buildList(currentList, currentFilter);
+  }).hover(function(){
+    $(this).css("background", "#b3ecff")
+      .css("border-radius", "1px")
+      .css('cursor', 'pointer');
+  }).mouseleave(function() {
+      $(this).css("background", "000").css("border-radius", "0px");
+  });
 
-	// Gender filter toggle
-	$gender.click(function() {
-		// Clears other DOM filter indicators
-		$name.html('<strong>Name</strong>');
-		$review.html('<strong>Review</strong>');
-	 	// Toggles gender filter by Male / Female
-		currentFilter.type === 'gender' && currentFilter.order === 'F' ?
-	 		currentFilter = {'type': 'gender', 'order': 'M'} :
-	 		currentFilter = {'type': 'gender', 'order': 'F'};
-		// Updates Gender button based on filter type
-		if ( currentFilter.order === 'M' ) {
-			$gender.html('<strong>Gender [M-F]</strong>');
-		} else if ( currentFilter.order === 'F' ) {
-			$gender.html('<strong>Gender [F-M]</strong>');
-		}
-		// Builds current list
-		buildList(currentList, currentFilter);
-	});
+  // Gender filter toggle
+  $gender.click(function() {
+    // Clears other DOM filter indicators
+    $name.html('<strong>Name</strong>');
+    $review.html('<strong>Review Score</strong>');
+    // Toggles gender filter by Male / Female
+    currentFilter.type === 'gender' && currentFilter.order === 'F' ?
+      currentFilter = {'type': 'gender', 'order': 'M'} :
+      currentFilter = {'type': 'gender', 'order': 'F'};
+    // Updates Gender button based on filter type
+    if ( currentFilter.order === 'M' ) {
+      $gender.html('<strong>Gender [M-F]</strong>');
+    } else if ( currentFilter.order === 'F' ) {
+      $gender.html('<strong>Gender [F-M]</strong>');
+    }
+    // Builds current list
+    buildList(currentList, currentFilter);
+  }).hover(function(){
+    $(this).css("background", "#b3ecff")
+      .css("border-radius", "1px")
+      .css('cursor', 'pointer');
+  }).mouseleave(function() {
+      $(this).css("background", "000").css("border-radius", "0px");
+  });
+    
+  $area.hover(function(){
+    $(this).css("background", "#f2f2f2").css("border-radius", "1px");
+  }).mouseleave(function() {
+    $(this).css("background", "000").css("border-radius", "0px");
+  });
+  
+  $specialty.hover(function(){
+    $(this).css("background", "#f2f2f2").css("border-radius", "1px");
+  }).mouseleave(function() {
+    $(this).css("background", "000").css("border-radius", "0px");
+  });
 
-	// Populates area dropdown
+  // Populates area dropdown
   for (var key in fields) {
-  	// Builds Dropdown with area names
-    $('<option>').val(key).text(key).appendTo($areaDropdown);
+    // Builds Dropdown with area names
+    $('<li>').html('<a href="#">' + key + '</a>').appendTo($areaDropdown);
   }
 
   // Invokes selectedSpecialty with selected area
-  $areaDropdown.change(function() {
-		// Stores selected area
-	 	currentArea = $(this).val();
-		// Builds specialty dropdown with area
-    selectedSpecialty($(this).val());
+  $areaDropdown.on("click", "li", function() {
+    // Stores selected area
+    currentArea = $(this).text();
+    // Builds specialty dropdown with area
+    selectedSpecialty($(this).text());
   });
 
-	// Builds specialty dropdown based on selected area
+  // Builds specialty dropdown based on selected area
   var selectedSpecialty = function(area) {
-  	// Clears previous specialties
-    $($specialtyDropdown).find('option').remove().end();
+    // Clears previous specialties
+    $($specialtyDropdown).find('li').remove().end();
     // Populates specialty dropdown
     for ( var i = 0; i < fields[area].length; i++ ) {
-    	$('<option>').val(fields[area][i]).text(fields[area][i]).appendTo($specialtyDropdown);
+      $('<li>').html('<a href="#">' + fields[area][i] + '</a>').appendTo($specialtyDropdown);
     }
-		// Populates doctors with same area
-		populateAreaDoctors(area);
+    // Populates doctors with same area
+    populateAreaDoctors(area);
   };
 
-  // Invokes populateDoctors with selected area
-  $specialtyDropdown.change(function() {
-		// Stores selected specialty
-	 	currentSpecialty = $(this).val();
-	 	// Checks selection
-		if ( $(this).val() === 'All' ) {
-			// Populates all doctors of the current area
-		 	populateAreaDoctors(currentArea);
-		} else {
-		 	// Populates doctors of specific specialty
-    	populateSpecialtyDoctors($(this).val());
+  $('#specialty-dropdown').on("click", "li", function() {
+    console.log('$(this).text(): ', $(this).text());
+    // Stores selected specialty
+    currentSpecialty = $(this).text();
+    // Checks selection
+    if ( $(this).text() === 'All' ) {
+        // Populates all doctors of the current area
+        populateAreaDoctors(currentArea);
+    } else {
+        // Populates doctors of specific specialty
+    populateSpecialtyDoctors($(this).text());
     }
-	});
+  });
 
-	// Sorts doctors by area
-	var populateAreaDoctors = function(area) {
-		// Stores areas
-		var areas = [];
-	 	// Makes sure something was selected from dropdown
-	 	if ( area !== '-' ) {
-			// Filters doctors by area only
-			database.doctors.forEach(function(val) {
-				if ( val['area'] === area) {
-					areas.push(val);
-				}
-			});
-			// Sorts filtered areas by current filter
-			sortList(areas, currentFilter);
-		}
-		// Updates current list of doctors
-		currentList = areas;
-		// Builds current list
-		buildList(currentList, currentFilter);
-	};
+  // Sorts doctors by area
+  var populateAreaDoctors = function(area) {
+    // Stores areas
+    var areas = [];
+    // Makes sure something was selected from dropdown
+    if ( area !== '-' ) {
+      // Filters doctors by area only
+      database.doctors.forEach(function(val) {
+        if ( val['area'] === area) {
+          areas.push(val);
+        }
+      });
+      // Sorts filtered areas by current filter
+      sortList(areas, currentFilter);
+    }
+    // Updates current list of doctors
+    currentList = areas;
+    // Builds current list
+    buildList(currentList, currentFilter);
+  };
     
-	// Sorts doctors by specialty
+  // Sorts doctors by specialty
   var populateSpecialtyDoctors = function(specialty) {
-  	// Stores specialists
+    // Stores specialists
     var specialists = [];
     // Filters doctors by specialty only    
     database.doctors.forEach(function(val) {
-    	if ( val['specialty'] === specialty) {
-    		specialists.push(val);
-    	}
+      if ( val['specialty'] === specialty) {
+        specialists.push(val);
+      }
     });
-		// Updates currentList of doctors
-		currentList = specialists;
-		// Builds current list
-		buildList(currentList, currentFilter);
-	};
+    // Updates currentList of doctors
+    currentList = specialists;
+    // Builds current list
+    buildList(currentList, currentFilter);
+  };
     
   // Append list function, takes in a sorted array
   var appendList = function(array) {
-  	// Clears out doctor list
-		$doctorList.empty();
-		// Makes sure array exists and contains at least 1 doctor
-		if ( array && array.length >= 1 ) {
-			// Appends each doctor to table
-			array.forEach(function(val) {
-				$doctorList.append('<tr><td>' + val.name + '</td>' +
-					'<td>' + val.area + '</td>' +
-					'<td>' + val.specialty + '</td>' +
-					'<td>' + val.review + '</td>' +
-					'<td>' + val.gender + '</td></tr>');	 
-			});
-		}
+    // Clears out doctor list
+    $doctorList.empty();
+    // Makes sure array exists and contains at least 1 doctor
+    if ( array && array.length >= 1 ) {
+      // Appends each doctor to table
+      array.forEach(function(val) {
+        $doctorList.append('<tr><td>' + val.name + '</td>' +
+          '<td>' + val.area + '</td>' +
+          '<td>' + val.specialty + '</td>' +
+          '<td>' + val.review + '</td>' +
+          '<td>' + val.gender + '</td></tr>');   
+      });
+    }
   };
 
-	// Sorts any list based on currently set filter
-	var sortList = function(array, filter) {
-		// Stores type of filter
-		var type = filter.type,
-		// Stores types order
-				order = filter.order;
-		// Makes sure the array exists
-		if ( array ) {
-		 	
-		 	// Review Sort
-		 	if ( type === 'review' && order === 'DSC') {
-			// Sorts by review: descending
-				return array.sort(function(a, b) {
-					return b[type] - a[type];
-				});
-			} else if ( type === 'review' && order === 'ASC' ) {
-			// Sorts by review: ascending
-				return array.sort(function(a, b) {
-					return a[type] - b[type];
-				});
-			}
+  // Sorts any list based on currently set filter
+  var sortList = function(array, filter) {
+    // Stores type of filter
+    var type = filter.type,
+    // Stores types order
+        order = filter.order;
+    // Makes sure the array exists
+    if ( array ) {
+      
+      // Review Sort
+      if ( type === 'review' && order === 'DSC') {
+      // Sorts by review: descending
+        return array.sort(function(a, b) {
+          return b[type] - a[type];
+        });
+      } else if ( type === 'review' && order === 'ASC' ) {
+      // Sorts by review: ascending
+        return array.sort(function(a, b) {
+          return a[type] - b[type];
+        });
+      }
 
-			// Gender Sort
-			if ( type === 'gender' ) {
-				// Sorts and stores all females
-				var female = [];
-				array.forEach(function(val) {
-					if ( val[type] === 'Female' ) {
-						female.push(val);
-					}
-				});
-				// Sorts females by review - descending
-				sortList(female, {'type': 'review', 'order': 'DSC'});
-				// Sorts and stores all males
-				var male = [];
-				array.forEach(function(val) {
-		 		 	if ( val[type] === 'Male') {
-						male.push(val);
-					}
-				});
-				// Sorts males by review - descending
-				sortList(male, {'type': 'review', 'order': 'DSC'});
-				// Orders M-F or F-M
-				if ( order === 'F' ) {
-				 	// Combines sorted gender arrays, female-male
-					var femaleSort = female.concat(male);
-					currentList = femaleSort;
-				} else if ( order === 'M' ) {
-					// Combines sorted gender arrays, male-female
-				 	var maleSort = male.concat(female);
-					currentList = maleSort;
-				}
-			}
-			
-			// Name Sort
-			if ( type === 'name' && order  === 'DSC' ) {
-			  // Sorts names in descending order
-				array.sort(function(a, b){
-					if(a.name < b.name) return -1;
-					if(a.name > b.name) return 1;
-					return 0;
-				});
-				currentList = array;
-			} else if ( type === 'name' && order === 'ASC' ) {
-			 	// Sorts names in ascending order
-				array.sort(function(a, b) {
-					if ( a.name < b.name ) return 1;
-					if ( a.name > b.name ) return -1;
-					return 0;
-				});
-				currentList = array;
-			}
-		}
-	};
+      // Gender Sort
+      if ( type === 'gender' ) {
+        // Sorts and stores all females
+        var female = [];
+        array.forEach(function(val) {
+          if ( val[type] === 'Female' ) {
+            female.push(val);
+          }
+        });
+        // Sorts females by review - descending
+        sortList(female, {'type': 'review', 'order': 'DSC'});
+        // Sorts and stores all males
+        var male = [];
+        array.forEach(function(val) {
+          if ( val[type] === 'Male') {
+            male.push(val);
+          }
+        });
+        // Sorts males by review - descending
+        sortList(male, {'type': 'review', 'order': 'DSC'});
+        // Orders M-F or F-M
+        if ( order === 'F' ) {
+          // Combines sorted gender arrays, female-male
+          var femaleSort = female.concat(male);
+          currentList = femaleSort;
+        } else if ( order === 'M' ) {
+          // Combines sorted gender arrays, male-female
+          var maleSort = male.concat(female);
+          currentList = maleSort;
+        }
+      }
+      
+      // Name Sort
+      if ( type === 'name' && order  === 'DSC' ) {
+        // Sorts names in descending order
+        array.sort(function(a, b){
+          if(a.name < b.name) return -1;
+          if(a.name > b.name) return 1;
+          return 0;
+        });
+        currentList = array;
+      } else if ( type === 'name' && order === 'ASC' ) {
+        // Sorts names in ascending order
+        array.sort(function(a, b) {
+          if ( a.name < b.name ) return 1;
+          if ( a.name > b.name ) return -1;
+          return 0;
+        });
+        currentList = array;
+      }
+    }
+  };
 
-		// Sorting Priority
-    	// Default Sort: Area > Specialty > Review: descending
-      // Filter Options: Review | Gender | Name
-				// Name: 	 Toggle Descending /Ascending
-        // Review: Toggle Descending / Ascending
-        // Gender: Toggle F-M / M-F
-					// By default, gender's secondary sort is by review: descending
-			
-			// Future additions:
-				// Filter by location. I ran out of time, but you may have noticed
-				// I added longitude/latitude property/values to my JSON dataset.
-				// I would have added an input for the users ZIP code, then allowed
-				// you to filter by nearest/furtherst doctor to your location.
-
-	// Builds DOM with current list and filters
-	var buildList = function(list, filters) {
-		sortList(list, filters);
-		appendList(currentList);
-	};
+  // Builds DOM with current list and filters
+  var buildList = function(list, filters) {
+    sortList(list, filters);
+    appendList(currentList);
+  };
 
 });
+
+// Sorting Priority
+  // Default Sort: Area > Specialty > Review: descending
+  // Filter Options: Review | Gender | Name
+    // Name:   Toggle Descending /Ascending
+    // Review: Toggle Descending / Ascending
+    // Gender: Toggle F-M / M-F
+      // By default, gender's secondary sort is by review: descending
+      
+// Future additions:
+  // Filter by location. I ran out of time, but you may have noticed
+  // I added longitude/latitude property/values to my JSON dataset.
+  // I would have added an input for the users ZIP code, then allowed
+  // you to filter by nearest/furtherst doctor to your location.
 
 // Database of doctors
 // The properties and values of this JSON dataset are randomly selected from set parameters.
