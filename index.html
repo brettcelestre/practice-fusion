@@ -4,8 +4,6 @@
     <meta charset="utf-8" />
     <title>Practice Fusion - Similar Doctors</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css">
-    
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     
@@ -19,9 +17,9 @@
         
         <div class='row selection' style="margin-top: -20px; margin-bottom: 15px;">
             <div class='col-md-3 area-selection'>
-                <h3 class="lead" style="margin-bottom:5px;">Select:</h3>
+                <h3 class="lead" style="margin-bottom:5px;">Based on Area:</h3>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Area <span class="caret"></span>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id='area-dropdown-title'>Area <span class="caret"></span>
                     </button>
                     <ul id="area-dropdown" class='dropdown-menu'>
                     </ul>
@@ -29,16 +27,25 @@
                 
             </div>
         
-            <div class='col-md-9 specialty-selection'>
-                <h3 class="lead" style="margin-bottom:5px;">Select:</h3>
+            <div class='col-md-3 specialty-selection'>
+                <h3 class="lead" style="margin-bottom:5px;">Based on Specialty:</h3>
 				<div class="btn-group">
-				    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Specialty <span class="caret"></span>
+				    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id='specialty-dropdown-title'>Specialty <span class="caret"></span>
 				    </button>
 					<ul id="specialty-dropdown" class='dropdown-menu'>
 					</ul>
 				</div>
-                    
         	</div>
+            
+            <div class='col-md-3 specialty-selection'>
+                <h3 class="lead" style="margin-bottom:5px;">Similar to Doctor:</h3>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id='doctors-dropdown-title'>Doctors <span class="caret"></span>
+                    </button>
+                    <ul id="doctor-dropdown" class='dropdown-menu' style="height: auto;max-height: 400px;overflow-x: hidden;">
+                    </ul>
+                </div>
+            </div>
         </div>
         
         

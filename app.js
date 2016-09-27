@@ -7,9 +7,13 @@ $(document).ready(function(){
       $name = $('#name'),
       $review = $('#review'),
       $area = $('#area'),
+      $areaTitle = $('#area-dropdown-title'),
       $specialty = $('#specialty'),
+      $specialtyTitle = $('#specialty-dropdown-title'),
       $gender = $('#gender'),
       $doctorList = $('#doctor-list'),
+      $doctors = $('#doctor-dropdown'),
+      $doctorTitle = $('#doctors-dropdown-title'),
       // Current filter parameters
       currentFilter = {
           'type': 'review', 
@@ -124,9 +128,26 @@ $(document).ready(function(){
     // Builds Dropdown with area names
     $('<li>').html('<a href="#">' + key + '</a>').appendTo($areaDropdown);
   }
+  
+  // Invokes selectedSpecialty with selected area
+  $doctors.on("click", "li", function() {
+    // Clears area/specialty dropdown titles
+    $areaTitle.text('Area');
+    $specialtyTitle.text('Specialty');
+    // Updates doctor search name
+    $doctorTitle.text($(this).text().split(',')[0].substr(0));
+    // Stores selected area
+    currentArea = $(this).text().split(',')[2].substr(1);
+    // Builds specialty dropdown with area
+    populateSpecialtyDoctors(currentArea);
+  });
 
   // Invokes selectedSpecialty with selected area
   $areaDropdown.on("click", "li", function() {
+    // Clears doctors search title
+    $doctorTitle.text('Doctors');
+    // Sets new search title
+    $areaTitle.text($(this).text());
     // Stores selected area
     currentArea = $(this).text();
     // Builds specialty dropdown with area
@@ -146,7 +167,10 @@ $(document).ready(function(){
   };
 
   $('#specialty-dropdown').on("click", "li", function() {
-    console.log('$(this).text(): ', $(this).text());
+    // Clears doctors search title
+    $doctorTitle.text('Doctors');
+    // Sets new search title
+    $specialtyTitle.text($(this).text());
     // Stores selected specialty
     currentSpecialty = $(this).text();
     // Checks selection
@@ -287,6 +311,15 @@ $(document).ready(function(){
       }
     }
   };
+  
+  // Sorts doctors by name
+  sortList(database.doctors, {'type': 'name', 'order': 'DSC'});
+  
+  // Populates doctor dropdown
+  for (var key in database.doctors) {
+    // Builds Dropdown with area names
+    $('<li>').html('<a href="#">' + database.doctors[key].name + ', ' + database.doctors[key].area + ', ' + database.doctors[key].specialty + '</a>').appendTo($doctors);
+  }
 
   // Builds DOM with current list and filters
   var buildList = function(list, filters) {
